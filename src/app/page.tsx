@@ -150,9 +150,9 @@ export default function Home() {
     pt: {
       work: "Trabalho",
       break: "Pausa",
+      reset: "Reiniciar",
       start: "Começar",
       pause: "Pausar",
-      reset: "Reiniciar",
       sessions: "Sessões Concluídas",
       language: "Idioma",
       workDuration: "Duração do Trabalho (minutos)",
@@ -171,12 +171,12 @@ export default function Home() {
 
         <Form {...form}>
           <form className="space-y-4">
-            <div className="flex space-x-4">
+            
               <FormField
                 control={form.control}
                 name="workDuration"
                 render={({ field }) => (
-                  <FormItem className="w-1/2">
+                  <FormItem className="w-full">
                     <FormLabel>{t.workDuration}</FormLabel>
                     <FormControl>
                       <Input
@@ -194,7 +194,7 @@ export default function Home() {
                 control={form.control}
                 name="breakDuration"
                 render={({ field }) => (
-                  <FormItem className="w-1/2">
+                  <FormItem className="w-full">
                     <FormLabel>{t.breakDuration}</FormLabel>
                     <FormControl>
                       <Input
@@ -208,7 +208,7 @@ export default function Home() {
                   </FormItem>
                 )}
               />
-            </div>
+            
           </form>
         </Form>
 
