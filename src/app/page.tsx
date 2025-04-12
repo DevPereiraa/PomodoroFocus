@@ -28,8 +28,8 @@ import {
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { useTheme } from 'next-themes';
-import { Switch } from "@/components/ui/switch";
-import { Sun, Moon } from "lucide-react";
+import { Sun, Moon, ClipboardList } from "lucide-react";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 const defaultWorkDuration = 25 * 60; // 25 minutes
 const defaultBreakDuration = 5 * 60; // 5 minutes
@@ -68,11 +68,13 @@ export default function Home() {
   const [customDuration, setCustomDuration] = useState<number | null>(null); // To store custom duration
   const [isAlarming, setIsAlarming] = useState(false);
   const [alarmVolume, setAlarmVolume] = useState(0.5);
-  const [alarmSound, setAlarmSound] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const { setTheme } = useTheme();
   const { theme } = useTheme();
+  const [sessionHistoryOpen, setSessionHistoryOpen] = useState(false); // State for session history dialog
+  const [pomodoroSessions, setPomodoroSessions] = useState<Date[]>([]); // State to store pomodoro sessions
+
 
   const alarmSoundRef = useRef<HTMLAudioElement | null>(null);
   const { toast } = useToast();
@@ -102,6 +104,10 @@ export default function Home() {
     setTimeRemaining(workDuration);
   }, [workDuration]);
 
+  const addPomodoroSession = () => {
+    setPomodoroSessions((prevSessions) => [...prevSessions, new Date()]);
+  };
+
   useEffect(() => {
     let interval: NodeJS.Timeout;
 
@@ -113,6 +119,7 @@ export default function Home() {
             // Session switch logic
             if (isWorkSession) {
               setPomodoroCount((count) => count + 1);
+              addPomodoroSession(); // Add the completed session
               setIsWorkSession(false);
             }
             setTimeRemaining(isWorkSession ? breakDuration : workDuration);
@@ -128,7 +135,7 @@ export default function Home() {
     }
 
     return () => clearInterval(interval);
-  }, [isActive, isWorkSession, workDuration, breakDuration, alarmSound]);
+  }, [isActive, isWorkSession, workDuration, breakDuration]);
 
   const toggleTimer = () => {
     setIsActive(!isActive);
@@ -356,9 +363,33 @@ export default function Home() {
         )}
 
         <div className="flex items-center justify-between mb-4">
-          <div className="text-lg">
-            {t.sessions}: {pomodoroCount}
-          </div>
+          <Dialog open={sessionHistoryOpen} onOpenChange={setSessionHistoryOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline" size="icon">
+                <ClipboardList className="h-4 w-4" />
+                {/* {t.sessions}: {pomodoroCount} */}
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[425px]">
+              <DialogHeader>
+                <DialogTitle>{t.sessions}</DialogTitle>
+                <DialogDescription>
+                  {pomodoroSessions.length > 0
+                    ? `You have completed ${pomodoroSessions.length} pomodoro sessions:`
+                    : "No pomodoro sessions completed yet."}
+                </DialogDescription>
+              </DialogHeader>
+              <div className="grid gap-4 py-4">
+                <ScrollArea className="h-[300px] w-full">
+                  {pomodoroSessions.map((date, index) => (
+                    <div key={index} className="py-2 border-b last:border-b-0">
+                      Session {index + 1}: {date.toLocaleDateString()} - {date.toLocaleTimeString()}
+                    </div>
+                  ))}
+                </ScrollArea>
+              </div>
+            </DialogContent>
+          </Dialog>
           <Button variant="outline" onClick={switchLanguage}>
             {t.language}: {language === "en" ? "English" : "Português"}
           </Button>
