@@ -3,18 +3,65 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
 
 const defaultWorkDuration = 25 * 60; // 25 minutes
 const defaultBreakDuration = 5 * 60; // 5 minutes
 
+const formSchema = z.object({
+  workDuration: z
+    .number({
+      required_error: "Work duration is required.",
+      invalid_type_error: "Work duration must be a number.",
+    })
+    .min(1, { message: "Work duration must be at least 1 minute." })
+    .max(90, { message: "Work duration must be at most 90 minutes." }),
+  breakDuration: z
+    .number({
+      required_error: "Break duration is required.",
+      invalid_type_error: "Break duration must be a number.",
+    })
+    .min(1, { message: "Break duration must be at least 1 minute." })
+    .max(30, { message: "Break duration must be at most 30 minutes." }),
+});
+
+type FormValues = z.infer<typeof formSchema>;
+
 export default function Home() {
-  const [workDuration, setWorkDuration] = useState(defaultWorkDuration);
-  const [breakDuration, setBreakDuration] = useState(defaultBreakDuration);
-  const [timeRemaining, setTimeRemaining] = useState(workDuration);
+  const [timeRemaining, setTimeRemaining] = useState(defaultWorkDuration);
   const [isActive, setIsActive] = useState(false);
   const [isWorkSession, setIsWorkSession] = useState(true);
   const [pomodoroCount, setPomodoroCount] = useState(0);
   const [language, setLanguage] = useState("en"); // 'en' for English, 'pt' for Portuguese
+
+  const form = useForm<FormValues>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      workDuration: 25,
+      breakDuration: 5,
+    },
+  });
+
+  const { watch } = form;
+
+  const workDuration = watch("workDuration") * 60;
+  const breakDuration = watch("breakDuration") * 60;
+
+  useEffect(() => {
+    setTimeRemaining(workDuration);
+  }, [workDuration]);
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
@@ -81,6 +128,8 @@ export default function Home() {
       reset: "Reset",
       sessions: "Sessions Completed",
       language: "Language",
+      workDuration: "Work Duration (minutes)",
+      breakDuration: "Break Duration (minutes)",
     },
     pt: {
       work: "Trabalho",
@@ -90,6 +139,8 @@ export default function Home() {
       reset: "Reiniciar",
       sessions: "Sessões Concluídas",
       language: "Idioma",
+      workDuration: "Duração do Trabalho (minutos)",
+      breakDuration: "Duração da Pausa (minutos)",
     },
   };
 
@@ -101,6 +152,58 @@ export default function Home() {
         <h1 className="text-3xl font-bold mb-6 text-center text-primary">
           Pomodoro Focus
         </h1>
+
+        <Form {...form}>
+          <form className="space-y-4">
+            <FormField
+              control={form.control}
+              name="workDuration"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{t.workDuration}</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      placeholder="25"
+                      {...field}
+                      onChange={(e) => {
+                        const value = parseInt(e.target.value);
+                        if (!isNaN(value)) {
+                          field.onChange(value);
+                        }
+                      }}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="breakDuration"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{t.breakDuration}</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      placeholder="5"
+                      {...field}
+                      onChange={(e) => {
+                        const value = parseInt(e.target.value);
+                        if (!isNaN(value)) {
+                          field.onChange(value);
+                        }
+                      }}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </form>
+        </Form>
 
         <div className="mb-8 rounded-xl p-4 bg-muted">
           <h2 className="text-xl font-semibold text-foreground mb-2 text-center">
@@ -122,7 +225,9 @@ export default function Home() {
         </div>
 
         <div className="flex items-center justify-between mb-4">
-          <div className="text-lg">{t.sessions}: {pomodoroCount}</div>
+          <div className="text-lg">
+            {t.sessions}: {pomodoroCount}
+          </div>
           <Button variant="outline" onClick={switchLanguage}>
             {t.language}: {language === "en" ? "English" : "Português"}
           </Button>
