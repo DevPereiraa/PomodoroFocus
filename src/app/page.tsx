@@ -26,6 +26,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { useToast } from "@/hooks/use-toast";
 
 const defaultWorkDuration = 25 * 60; // 25 minutes
 const defaultBreakDuration = 5 * 60; // 5 minutes
@@ -66,9 +67,10 @@ export default function Home() {
   const [alarmVolume, setAlarmVolume] = useState(0.5);
   const [alarmSound, setAlarmSound] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
-    const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   const alarmSoundRef = useRef<HTMLAudioElement | null>(null);
+  const { toast } = useToast();
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -87,8 +89,8 @@ export default function Home() {
   const initialBreakDurationRef = useRef(breakDuration);
 
   useEffect(() => {
-      initialWorkDurationRef.current = workDuration;
-      initialBreakDurationRef.current = breakDuration;
+    initialWorkDurationRef.current = workDuration;
+    initialBreakDurationRef.current = breakDuration;
   }, [workDuration, breakDuration]);
 
   useEffect(() => {
@@ -134,9 +136,11 @@ export default function Home() {
   };
 
   const resetTimer = () => {
-      setIsActive(false);
-      setTimeRemaining(isWorkSession ? initialWorkDurationRef.current : initialBreakDurationRef.current);
-      stopAlarm();
+    setIsActive(false);
+    setTimeRemaining(
+      isWorkSession ? initialWorkDurationRef.current : initialBreakDurationRef.current
+    );
+    stopAlarm();
   };
 
   const switchLanguage = () => {
@@ -172,7 +176,8 @@ export default function Home() {
       alarmSound: "Alarm Sound",
       stopAlarm: "Stop Alarm",
       chooseSound: "Choose Sound",
-        uploadSound: "Upload Sound",
+      uploadSound: "Upload Sound",
+      skipBreak: "Skip Break",
     },
     pt: {
       work: "Trabalho",
@@ -189,7 +194,8 @@ export default function Home() {
       alarmSound: "Som do Alarme",
       stopAlarm: "Parar Alarme",
       chooseSound: "Escolher Som",
-        uploadSound: "Carregar Som",
+      uploadSound: "Carregar Som",
+      skipBreak: "Pular Pausa",
     },
   };
 
@@ -215,7 +221,6 @@ export default function Home() {
     }, 30000);
   };
 
-
   const stopAlarm = () => {
     if (alarmSoundRef.current) {
       alarmSoundRef.current.pause();
@@ -224,14 +229,26 @@ export default function Home() {
     setIsAlarming(false);
   };
 
-    const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        const file = event.target.files?.[0];
-        if (file) {
-            setSelectedFile(file);
-            const url = URL.createObjectURL(file);
-            setAlarmSound(url);
-        }
-    };
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      setSelectedFile(file);
+      const url = URL.createObjectURL(file);
+      setAlarmSound(url);
+    }
+  };
+
+  const skipBreak = () => {
+    setTimeRemaining(workDuration);
+    setIsWorkSession(true);
+    stopAlarm();
+    setIsActive(true);
+
+    toast({
+      title: "Break Skipped!",
+      description: "You're back to work.",
+    });
+  };
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen py-10 bg-secondary">
@@ -242,44 +259,33 @@ export default function Home() {
 
         <Form {...form}>
           <form className="space-y-4">
-            
-              <FormField
-                control={form.control}
-                name="workDuration"
-                render={({ field }) => (
-                  <FormItem className="w-full">
-                    <FormLabel>{t.workDuration}</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        placeholder="25"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+            <FormField
+              control={form.control}
+              name="workDuration"
+              render={({ field }) => (
+                <FormItem className="w-full">
+                  <FormLabel>{t.workDuration}</FormLabel>
+                  <FormControl>
+                    <Input type="number" placeholder="25" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-              <FormField
-                control={form.control}
-                name="breakDuration"
-                render={({ field }) => (
-                  <FormItem className="w-full">
-                    <FormLabel>{t.breakDuration}</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        placeholder="5"
-                        {...field}
-
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            
+            <FormField
+              control={form.control}
+              name="breakDuration"
+              render={({ field }) => (
+                <FormItem className="w-full">
+                  <FormLabel>{t.breakDuration}</FormLabel>
+                  <FormControl>
+                    <Input type="number" placeholder="5" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
           </form>
         </Form>
 
@@ -313,6 +319,15 @@ export default function Home() {
           </Button>
         </div>
 
+        {/* Skip Break Button */}
+        {!isWorkSession && (
+          <div className="flex justify-center mb-4">
+            <Button variant="secondary" onClick={skipBreak}>
+              {t.skipBreak}
+            </Button>
+          </div>
+        )}
+
         <div className="flex items-center justify-between mb-4">
           <div className="text-lg">
             {t.sessions}: {pomodoroCount}
@@ -332,9 +347,7 @@ export default function Home() {
             <DialogContent className="sm:max-w-[425px]">
               <DialogHeader>
                 <DialogTitle>{t.settings}</DialogTitle>
-                <DialogDescription>
-                  {t.chooseSound}
-                </DialogDescription>
+                <DialogDescription>{t.chooseSound}</DialogDescription>
               </DialogHeader>
               <div className="grid gap-4 py-4">
                 <div className="grid grid-cols-4 items-center gap-4">
@@ -350,37 +363,39 @@ export default function Home() {
                     onValueChange={(value) => setAlarmVolume(value[0] / 100)}
                   />
                 </div>
-                  <div className="grid grid-cols-4 items-center gap-4">
-                      <Label htmlFor="alarmSound" className="text-right">
-                          {t.uploadSound}
-                      </Label>
-                      <Input
-                          type="file"
-                          id="alarmSound"
-                          accept="audio/*"
-                          className="col-span-3"
-                          onChange={handleFileChange}
-                      />
-                  </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="alarmSound" className="text-right">
+                    {t.uploadSound}
+                  </Label>
+                  <Input
+                    type="file"
+                    id="alarmSound"
+                    accept="audio/*"
+                    className="col-span-3"
+                    onChange={handleFileChange}
+                  />
+                </div>
               </div>
             </DialogContent>
           </Dialog>
         </div>
-          {isAlarming && (
-            <div className="fixed top-0 left-0 w-full h-full bg-black/50 flex items-center justify-center z-50">
-              <div className="bg-card p-6 rounded-lg shadow-xl">
-                <h2 className="text-2xl font-semibold text-center mb-4">{t.alarmSound}</h2>
-                <p className="text-center text-muted-foreground mb-4">
-                  {t.stopAlarm}?
-                </p>
-                <div className="flex justify-center">
-                  <Button variant="destructive" size="lg" onClick={toggleTimer}>
-                    {t.stopAlarm}
-                  </Button>
-                </div>
+        {isAlarming && (
+          <div className="fixed top-0 left-0 w-full h-full bg-black/50 flex items-center justify-center z-50">
+            <div className="bg-card p-6 rounded-lg shadow-xl">
+              <h2 className="text-2xl font-semibold text-center mb-4">
+                {t.alarmSound}
+              </h2>
+              <p className="text-center text-muted-foreground mb-4">
+                {t.stopAlarm}?
+              </p>
+              <div className="flex justify-center">
+                <Button variant="destructive" size="lg" onClick={toggleTimer}>
+                  {t.stopAlarm}
+                </Button>
               </div>
             </div>
-          )}
+          </div>
+        )}
       </div>
     </div>
   );
