@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
@@ -52,6 +52,7 @@ export default function Home() {
   const [isWorkSession, setIsWorkSession] = useState(true);
   const [pomodoroCount, setPomodoroCount] = useState(0);
   const [language, setLanguage] = useState("en"); // 'en' for English, 'pt' for Portuguese
+  const [customDuration, setCustomDuration] = useState<number | null>(null); // To store custom duration
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -65,6 +66,14 @@ export default function Home() {
 
   const workDuration = Number(watch("workDuration")) * 60;
   const breakDuration = Number(watch("breakDuration")) * 60;
+
+  const initialWorkDurationRef = useRef(workDuration);
+  const initialBreakDurationRef = useRef(breakDuration);
+
+  useEffect(() => {
+      initialWorkDurationRef.current = workDuration;
+      initialBreakDurationRef.current = breakDuration;
+  }, [workDuration, breakDuration]);
 
   useEffect(() => {
     setTimeRemaining(workDuration);
@@ -105,8 +114,8 @@ export default function Home() {
   };
 
   const resetTimer = () => {
-    setIsActive(false);
-    setTimeRemaining(isWorkSession ? workDuration : breakDuration);
+      setIsActive(false);
+      setTimeRemaining(isWorkSession ? initialWorkDurationRef.current : initialBreakDurationRef.current);
   };
 
   const switchLanguage = () => {
@@ -203,7 +212,7 @@ export default function Home() {
           </form>
         </Form>
 
-        <div className="mb-8 rounded-xl p-4 bg-muted">
+        <div className="mb-8 mt-8 rounded-xl p-4 bg-muted">
           <h2 className="text-xl font-semibold text-foreground mb-2 text-center">
             {isWorkSession ? t.work : t.break}
           </h2>
