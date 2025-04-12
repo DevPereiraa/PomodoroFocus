@@ -113,14 +113,11 @@ export default function Home() {
             // Session switch logic
             if (isWorkSession) {
               setPomodoroCount((count) => count + 1);
-              setTimeRemaining(breakDuration);
               setIsWorkSession(false);
-            } else {
-              setTimeRemaining(workDuration);
-              setIsWorkSession(true);
             }
+            setTimeRemaining(isWorkSession ? breakDuration : workDuration);
+            setIsWorkSession(!isWorkSession);
             setIsActive(false);
-            startAlarm();
             return 0;
           }
           return prevTime - 1;
@@ -208,34 +205,6 @@ export default function Home() {
 
   const t = translations[language];
 
-  const startAlarm = () => {
-    if (!alarmSound) return;
-
-    if (alarmSoundRef.current) {
-      alarmSoundRef.current.pause();
-      alarmSoundRef.current.currentTime = 0;
-    }
-
-    alarmSoundRef.current = new Audio(alarmSound);
-    alarmSoundRef.current.volume = alarmVolume;
-    alarmSoundRef.current.loop = true;
-    alarmSoundRef.current.play();
-    setIsAlarming(true);
-
-    // Stop the alarm after 30 seconds
-    setTimeout(() => {
-      stopAlarm();
-    }, 30000);
-  };
-
-  const stopAlarm = () => {
-    if (alarmSoundRef.current) {
-      alarmSoundRef.current.pause();
-      alarmSoundRef.current.currentTime = 0;
-    }
-    setIsAlarming(false);
-  };
-
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
@@ -248,7 +217,6 @@ export default function Home() {
   const skipBreak = () => {
     setTimeRemaining(workDuration);
     setIsWorkSession(true);
-    stopAlarm();
     setIsActive(true);
 
     toast({
@@ -395,23 +363,6 @@ export default function Home() {
             {t.language}: {language === "en" ? "English" : "Português"}
           </Button>
         </div>
-        {isAlarming && (
-          <div className="fixed top-0 left-0 w-full h-full bg-black/50 flex items-center justify-center z-50">
-            <div className="bg-card p-6 rounded-lg shadow-xl">
-              <h2 className="text-2xl font-semibold text-center mb-4">
-                {t.alarmSound}
-              </h2>
-              <p className="text-center text-muted-foreground mb-4">
-                {t.stopAlarm}?
-              </p>
-              <div className="flex justify-center">
-                <Button variant="destructive" size="lg" onClick={toggleTimer}>
-                  {t.stopAlarm}
-                </Button>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );
