@@ -28,9 +28,9 @@ const formSchema = z.object({
     })
     .refine((value) => {
       const numValue = Number(value);
-      return !isNaN(numValue) && numValue > 0 && numValue <= 90;
+      return !isNaN(numValue) && numValue > 0 && numValue <= 3600;
     }, {
-      message: "Work duration must be a number between 1 and 90 minutes.",
+      message: "Work duration must be a number between 1 and 3600 minutes.",
     }),
   breakDuration: z
     .string({
@@ -38,9 +38,9 @@ const formSchema = z.object({
     })
     .refine((value) => {
       const numValue = Number(value);
-      return !isNaN(numValue) && numValue > 0 && numValue <= 30;
+      return !isNaN(numValue) && numValue > 0 && numValue <= 3600;
     }, {
-      message: "Break duration must be a number between 1 and 30 minutes.",
+      message: "Break duration must be a number between 1 and 3600 minutes.",
     }),
 });
 
@@ -162,42 +162,44 @@ export default function Home() {
 
         <Form {...form}>
           <form className="space-y-4">
-            <FormField
-              control={form.control}
-              name="workDuration"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{t.workDuration}</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      placeholder="25"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <div className="flex space-x-4">
+              <FormField
+                control={form.control}
+                name="workDuration"
+                render={({ field }) => (
+                  <FormItem className="w-1/2">
+                    <FormLabel>{t.workDuration}</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        placeholder="25"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-            <FormField
-              control={form.control}
-              name="breakDuration"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{t.breakDuration}</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      placeholder="5"
-                      {...field}
-                      
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+              <FormField
+                control={form.control}
+                name="breakDuration"
+                render={({ field }) => (
+                  <FormItem className="w-1/2">
+                    <FormLabel>{t.breakDuration}</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        placeholder="5"
+                        {...field}
+
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
           </form>
         </Form>
 
