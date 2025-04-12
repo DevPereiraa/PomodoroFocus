@@ -16,25 +16,32 @@ import {
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { CirclePause, CirclePlay, RotateCcw } from "lucide-react";
 
 const defaultWorkDuration = 25 * 60; // 25 minutes
 const defaultBreakDuration = 5 * 60; // 5 minutes
 
 const formSchema = z.object({
   workDuration: z
-    .number({
+    .string({
       required_error: "Work duration is required.",
-      invalid_type_error: "Work duration must be a number.",
     })
-    .min(1, { message: "Work duration must be at least 1 minute." })
-    .max(90, { message: "Work duration must be at most 90 minutes." }),
+    .refine((value) => {
+      const numValue = Number(value);
+      return !isNaN(numValue) && numValue > 0 && numValue <= 90;
+    }, {
+      message: "Work duration must be a number between 1 and 90 minutes.",
+    }),
   breakDuration: z
-    .number({
+    .string({
       required_error: "Break duration is required.",
-      invalid_type_error: "Break duration must be a number.",
     })
-    .min(1, { message: "Break duration must be at least 1 minute." })
-    .max(30, { message: "Break duration must be at most 30 minutes." }),
+    .refine((value) => {
+      const numValue = Number(value);
+      return !isNaN(numValue) && numValue > 0 && numValue <= 30;
+    }, {
+      message: "Break duration must be a number between 1 and 30 minutes.",
+    }),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -49,15 +56,15 @@ export default function Home() {
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      workDuration: 25,
-      breakDuration: 5,
+      workDuration: "25",
+      breakDuration: "5",
     },
   });
 
   const { watch } = form;
 
-  const workDuration = watch("workDuration") * 60;
-  const breakDuration = watch("breakDuration") * 60;
+  const workDuration = Number(watch("workDuration")) * 60;
+  const breakDuration = Number(watch("breakDuration")) * 60;
 
   useEffect(() => {
     setTimeRemaining(workDuration);
@@ -166,12 +173,6 @@ export default function Home() {
                       type="number"
                       placeholder="25"
                       {...field}
-                      onChange={(e) => {
-                        const value = parseInt(e.target.value);
-                        if (!isNaN(value)) {
-                          field.onChange(value);
-                        }
-                      }}
                     />
                   </FormControl>
                   <FormMessage />
@@ -190,12 +191,7 @@ export default function Home() {
                       type="number"
                       placeholder="5"
                       {...field}
-                      onChange={(e) => {
-                        const value = parseInt(e.target.value);
-                        if (!isNaN(value)) {
-                          field.onChange(value);
-                        }
-                      }}
+                      
                     />
                   </FormControl>
                   <FormMessage />
@@ -217,9 +213,20 @@ export default function Home() {
 
         <div className="flex space-x-4 mb-6 justify-center">
           <Button variant="accent" size="lg" onClick={toggleTimer}>
-            {isActive ? t.pause : t.start}
+            {isActive ? (
+              <>
+                <CirclePause className="mr-2 h-5 w-5" />
+                {t.pause}
+              </>
+            ) : (
+              <>
+                <CirclePlay className="mr-2 h-5 w-5" />
+                {t.start}
+              </>
+            )}
           </Button>
           <Button size="lg" onClick={resetTimer}>
+            <RotateCcw className="mr-2 h-5 w-5" />
             {t.reset}
           </Button>
         </div>
