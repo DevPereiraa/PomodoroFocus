@@ -11,6 +11,7 @@ const nextConfig: NextConfig = {
   webpack: (config) => {
     config.module.rules.push({
       test: /\.mp3$/,
+      type: 'javascript/auto',
       use: {
         loader: 'file-loader',
         options: {
