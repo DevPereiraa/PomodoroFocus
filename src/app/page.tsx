@@ -96,29 +96,38 @@ export default function Home() {
   const t = translations[language];
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen py-2">
-      <h1 className="text-2xl font-bold mb-4">Pomodoro Focus</h1>
+    <div className="flex flex-col items-center justify-center min-h-screen py-10 bg-secondary">
+      <div className="container max-w-md p-8 rounded-2xl shadow-lg bg-card">
+        <h1 className="text-3xl font-bold mb-6 text-center text-primary">
+          Pomodoro Focus
+        </h1>
 
-      <div className="mb-8">
-        <h2>{isWorkSession ? t.work : t.break}</h2>
-        <div className="text-4xl font-bold">{formatTime(timeRemaining)}</div>
-        <Progress value={progress} className="h-2 w-64" />
+        <div className="mb-8 rounded-xl p-4 bg-muted">
+          <h2 className="text-xl font-semibold text-foreground mb-2 text-center">
+            {isWorkSession ? t.work : t.break}
+          </h2>
+          <div className="text-5xl font-bold text-center text-primary">
+            {formatTime(timeRemaining)}
+          </div>
+          <Progress value={progress} className="h-3 w-full mt-4" />
+        </div>
+
+        <div className="flex space-x-4 mb-6 justify-center">
+          <Button variant="accent" size="lg" onClick={toggleTimer}>
+            {isActive ? t.pause : t.start}
+          </Button>
+          <Button size="lg" onClick={resetTimer}>
+            {t.reset}
+          </Button>
+        </div>
+
+        <div className="flex items-center justify-between mb-4">
+          <div className="text-lg">{t.sessions}: {pomodoroCount}</div>
+          <Button variant="outline" onClick={switchLanguage}>
+            {t.language}: {language === "en" ? "English" : "Português"}
+          </Button>
+        </div>
       </div>
-
-      <div className="flex space-x-4 mb-4">
-        <Button variant="accent" onClick={toggleTimer}>
-          {isActive ? t.pause : t.start}
-        </Button>
-        <Button onClick={resetTimer}>{t.reset}</Button>
-      </div>
-
-      <div className="mb-4">
-        {t.sessions}: {pomodoroCount}
-      </div>
-
-      <Button onClick={switchLanguage}>
-        {t.language}: {language === "en" ? "English" : "Português"}
-      </Button>
     </div>
   );
 }
