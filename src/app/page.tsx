@@ -64,17 +64,16 @@ export default function Home() {
   const [isActive, setIsActive] = useState(false);
   const [isWorkSession, setIsWorkSession] = useState(true);
   const [pomodoroCount, setPomodoroCount] = useState(0);
-  const [language, setLanguage] = useState("en"); // 'en' for English, 'pt' for Portuguese
-  const [customDuration, setCustomDuration] = useState<number | null>(null); // To store custom duration
+  const [language, setLanguage] = useState("en"); 
+  const [customDuration, setCustomDuration] = useState<number | null>(null); 
   const [isAlarming, setIsAlarming] = useState(false);
   const [alarmVolume, setAlarmVolume] = useState(0.5);
   const [open, setOpen] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const { setTheme } = useTheme();
   const { theme } = useTheme();
-  const [sessionHistoryOpen, setSessionHistoryOpen] = useState(false); // State for session history dialog
-  const [pomodoroSessions, setPomodoroSessions] = useState<Date[]>([]); // State to store pomodoro sessions
-
+  const [sessionHistoryOpen, setSessionHistoryOpen] = useState(false); 
+  const [pomodoroSessions, setPomodoroSessions] = useState<Date[]>([]); 
 
   const alarmSoundRef = useRef<HTMLAudioElement | null>(null);
   const { toast } = useToast();
@@ -116,10 +115,10 @@ export default function Home() {
         setTimeRemaining((prevTime) => {
           if (prevTime <= 0) {
             clearInterval(interval);
-            // Session switch logic
+            
             if (isWorkSession) {
               setPomodoroCount((count) => count + 1);
-              addPomodoroSession(); // Add the completed session
+              addPomodoroSession(); 
               setIsWorkSession(false);
             }
             setTimeRemaining(isWorkSession ? breakDuration : workDuration);
@@ -188,6 +187,7 @@ export default function Home() {
       uploadSound: "Upload Sound",
       skipBreak: "Skip Break",
       theme: "Theme",
+      comingSoon: "Coming Soon",
     },
     pt: {
       work: "Trabalho",
@@ -207,6 +207,7 @@ export default function Home() {
       uploadSound: "Carregar Som",
       skipBreak: "Pular Pausa",
       theme: "Tema",
+      comingSoon: "Em breve", 
     },
   };
 
@@ -235,7 +236,7 @@ export default function Home() {
   return (
     <div className="flex flex-col items-center justify-center min-h-screen py-10 bg-secondary">
       <div className="container max-w-md p-8 rounded-2xl shadow-lg bg-card">
-        
+
         <div className="flex justify-end">
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
@@ -367,18 +368,16 @@ export default function Home() {
             <DialogTrigger asChild>
               <Button variant="outline" size="icon">
                 <ClipboardList className="h-4 w-4" />
-                {/* {t.sessions}: {pomodoroCount} */}
               </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[425px]">
               <DialogHeader>
                 <DialogTitle>{t.sessions}</DialogTitle>
                 <DialogDescription>
-                  {pomodoroSessions.length > 0
-                    ? `You have completed ${pomodoroSessions.length} pomodoro sessions:`
-                    : "No pomodoro sessions completed yet."}
+                  {t.comingSoon}
                 </DialogDescription>
               </DialogHeader>
+              {/*
               <div className="grid gap-4 py-4">
                 <ScrollArea className="h-[300px] w-full">
                   {pomodoroSessions.map((date, index) => (
@@ -388,6 +387,7 @@ export default function Home() {
                   ))}
                 </ScrollArea>
               </div>
+              */}
             </DialogContent>
           </Dialog>
           <Button variant="outline" onClick={switchLanguage}>
