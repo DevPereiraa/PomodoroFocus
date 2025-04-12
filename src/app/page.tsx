@@ -16,7 +16,22 @@ import {
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { CirclePause, CirclePlay, RotateCcw } from "lucide-react";
+import { CirclePause, CirclePlay, RotateCcw, Settings } from "lucide-react";
+import { Slider } from "@/components/ui/slider";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
+// Import sound files
+import alarmSoundAbertura from './sounds/iphone_abertura.mp3';
+import alarmSoundClassic from './sounds/classic_alarm.mp3';
+import alarmSoundDigital from './sounds/digital_alarm.mp3';
 
 const defaultWorkDuration = 25 * 60; // 25 minutes
 const defaultBreakDuration = 5 * 60; // 5 minutes
@@ -53,6 +68,12 @@ export default function Home() {
   const [pomodoroCount, setPomodoroCount] = useState(0);
   const [language, setLanguage] = useState("en"); // 'en' for English, 'pt' for Portuguese
   const [customDuration, setCustomDuration] = useState<number | null>(null); // To store custom duration
+  const [isAlarming, setIsAlarming] = useState(false);
+  const [alarmVolume, setAlarmVolume] = useState(0.5);
+  const [alarmSound, setAlarmSound] = useState(alarmSoundAbertura);
+  const [open, setOpen] = useState(false);
+
+  const alarmSoundRef = useRef<HTMLAudioElement | null>(null);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -97,6 +118,7 @@ export default function Home() {
               setIsWorkSession(true);
             }
             setIsActive(false);
+            startAlarm();
             return 0;
           }
           return prevTime - 1;
@@ -111,11 +133,15 @@ export default function Home() {
 
   const toggleTimer = () => {
     setIsActive(!isActive);
+    if (isAlarming) {
+      stopAlarm();
+    }
   };
 
   const resetTimer = () => {
       setIsActive(false);
       setTimeRemaining(isWorkSession ? initialWorkDurationRef.current : initialBreakDurationRef.current);
+      stopAlarm();
   };
 
   const switchLanguage = () => {
@@ -146,6 +172,11 @@ export default function Home() {
       language: "Language",
       workDuration: "Work Duration (minutes)",
       breakDuration: "Break Duration (minutes)",
+      settings: "Settings",
+      volume: "Volume",
+      alarmSound: "Alarm Sound",
+      stopAlarm: "Stop Alarm",
+      chooseSound: "Choose Sound",
     },
     pt: {
       work: "Trabalho",
@@ -157,10 +188,41 @@ export default function Home() {
       language: "Idioma",
       workDuration: "Duração do Trabalho (minutos)",
       breakDuration: "Duração da Pausa (minutos)",
+      settings: "Configurações",
+      volume: "Volume",
+      alarmSound: "Som do Alarme",
+      stopAlarm: "Parar Alarme",
+      chooseSound: "Escolher Som",
     },
   };
 
   const t = translations[language];
+
+  const startAlarm = () => {
+    if (alarmSoundRef.current) {
+      alarmSoundRef.current.pause();
+      alarmSoundRef.current.currentTime = 0;
+    }
+    alarmSoundRef.current = new Audio(alarmSound);
+    alarmSoundRef.current.volume = alarmVolume;
+    alarmSoundRef.current.loop = true;
+    alarmSoundRef.current.play();
+    setIsAlarming(true);
+  };
+
+  const stopAlarm = () => {
+    if (alarmSoundRef.current) {
+      alarmSoundRef.current.pause();
+      alarmSoundRef.current.currentTime = 0;
+    }
+    setIsAlarming(false);
+  };
+
+  const alarmOptions = [
+    { value: alarmSoundAbertura, label: 'Abertura' },
+    { value: alarmSoundClassic, label: 'Classic' },
+    { value: alarmSoundDigital, label: 'Digital' },
+  ];
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen py-10 bg-secondary">
@@ -250,6 +312,71 @@ export default function Home() {
             {t.language}: {language === "en" ? "English" : "Português"}
           </Button>
         </div>
+
+        <div className="flex justify-center mt-4">
+          <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger asChild>
+              <Button variant="ghost" size="icon">
+                <Settings className="h-5 w-5" />
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[425px]">
+              <DialogHeader>
+                <DialogTitle>{t.settings}</DialogTitle>
+                <DialogDescription>
+                  {t.chooseSound}
+                </DialogDescription>
+              </DialogHeader>
+              <div className="grid gap-4 py-4">
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="volume" className="text-right">
+                    {t.volume}
+                  </Label>
+                  <Slider
+                    id="volume"
+                    defaultValue={[alarmVolume * 100]}
+                    max={100}
+                    step={1}
+                    className="col-span-3"
+                    onValueChange={(value) => setAlarmVolume(value[0] / 100)}
+                  />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="alarmSound" className="text-right">
+                    {t.alarmSound}
+                  </Label>
+                  <Select onValueChange={(value) => setAlarmSound(value)}>
+                    <SelectTrigger className="col-span-3">
+                      <SelectValue placeholder={t.chooseSound} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {alarmOptions.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
+        </div>
+          {isAlarming && (
+            <div className="fixed top-0 left-0 w-full h-full bg-black/50 flex items-center justify-center z-50">
+              <div className="bg-card p-6 rounded-lg shadow-xl">
+                <h2 className="text-2xl font-semibold text-center mb-4">{t.alarmSound}</h2>
+                <p className="text-center text-muted-foreground mb-4">
+                  {t.stopAlarm}?
+                </p>
+                <div className="flex justify-center">
+                  <Button variant="destructive" size="lg" onClick={toggleTimer}>
+                    {t.stopAlarm}
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
       </div>
     </div>
   );
