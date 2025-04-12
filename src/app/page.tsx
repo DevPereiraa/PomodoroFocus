@@ -26,12 +26,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-
-// Import sound files
-import alarmSoundAbertura from './sounds/iphone_abertura.mp3';
-import alarmSoundClassic from './sounds/classic_alarm.mp3';
-import alarmSoundDigital from './sounds/digital_alarm.mp3';
 
 const defaultWorkDuration = 25 * 60; // 25 minutes
 const defaultBreakDuration = 5 * 60; // 5 minutes
@@ -70,8 +64,9 @@ export default function Home() {
   const [customDuration, setCustomDuration] = useState<number | null>(null); // To store custom duration
   const [isAlarming, setIsAlarming] = useState(false);
   const [alarmVolume, setAlarmVolume] = useState(0.5);
-  const [alarmSound, setAlarmSound] = useState(alarmSoundAbertura);
+  const [alarmSound, setAlarmSound] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
+    const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   const alarmSoundRef = useRef<HTMLAudioElement | null>(null);
 
@@ -129,7 +124,7 @@ export default function Home() {
     }
 
     return () => clearInterval(interval);
-  }, [isActive, isWorkSession, workDuration, breakDuration]);
+  }, [isActive, isWorkSession, workDuration, breakDuration, alarmSound]);
 
   const toggleTimer = () => {
     setIsActive(!isActive);
@@ -177,6 +172,7 @@ export default function Home() {
       alarmSound: "Alarm Sound",
       stopAlarm: "Stop Alarm",
       chooseSound: "Choose Sound",
+        uploadSound: "Upload Sound",
     },
     pt: {
       work: "Trabalho",
@@ -193,22 +189,32 @@ export default function Home() {
       alarmSound: "Som do Alarme",
       stopAlarm: "Parar Alarme",
       chooseSound: "Escolher Som",
+        uploadSound: "Carregar Som",
     },
   };
 
   const t = translations[language];
 
   const startAlarm = () => {
+    if (!alarmSound) return;
+
     if (alarmSoundRef.current) {
       alarmSoundRef.current.pause();
       alarmSoundRef.current.currentTime = 0;
     }
+
     alarmSoundRef.current = new Audio(alarmSound);
     alarmSoundRef.current.volume = alarmVolume;
     alarmSoundRef.current.loop = true;
     alarmSoundRef.current.play();
     setIsAlarming(true);
+
+    // Stop the alarm after 30 seconds
+    setTimeout(() => {
+      stopAlarm();
+    }, 30000);
   };
+
 
   const stopAlarm = () => {
     if (alarmSoundRef.current) {
@@ -218,11 +224,14 @@ export default function Home() {
     setIsAlarming(false);
   };
 
-  const alarmOptions = [
-    { value: alarmSoundAbertura, label: 'Abertura' },
-    { value: alarmSoundClassic, label: 'Classic' },
-    { value: alarmSoundDigital, label: 'Digital' },
-  ];
+    const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (file) {
+            setSelectedFile(file);
+            const url = URL.createObjectURL(file);
+            setAlarmSound(url);
+        }
+    };
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen py-10 bg-secondary">
@@ -341,23 +350,18 @@ export default function Home() {
                     onValueChange={(value) => setAlarmVolume(value[0] / 100)}
                   />
                 </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="alarmSound" className="text-right">
-                    {t.alarmSound}
-                  </Label>
-                  <Select onValueChange={(value) => setAlarmSound(value)}>
-                    <SelectTrigger className="col-span-3">
-                      <SelectValue placeholder={t.chooseSound} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {alarmOptions.map((option) => (
-                        <SelectItem key={option.value} value={option.value}>
-                          {option.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+                  <div className="grid grid-cols-4 items-center gap-4">
+                      <Label htmlFor="alarmSound" className="text-right">
+                          {t.uploadSound}
+                      </Label>
+                      <Input
+                          type="file"
+                          id="alarmSound"
+                          accept="audio/*"
+                          className="col-span-3"
+                          onChange={handleFileChange}
+                      />
+                  </div>
               </div>
             </DialogContent>
           </Dialog>
