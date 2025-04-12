@@ -27,6 +27,9 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
+import { useTheme } from 'next-themes';
+import { Switch } from "@/components/ui/switch";
+import { Sun, Moon } from "lucide-react";
 
 const defaultWorkDuration = 25 * 60; // 25 minutes
 const defaultBreakDuration = 5 * 60; // 5 minutes
@@ -68,6 +71,8 @@ export default function Home() {
   const [alarmSound, setAlarmSound] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const { setTheme } = useTheme();
+  const { theme } = useTheme();
 
   const alarmSoundRef = useRef<HTMLAudioElement | null>(null);
   const { toast } = useToast();
@@ -178,6 +183,7 @@ export default function Home() {
       chooseSound: "Choose Sound",
       uploadSound: "Upload Sound",
       skipBreak: "Skip Break",
+      theme: "Theme",
     },
     pt: {
       work: "Trabalho",
@@ -196,6 +202,7 @@ export default function Home() {
       chooseSound: "Escolher Som",
       uploadSound: "Carregar Som",
       skipBreak: "Pular Pausa",
+      theme: "Tema",
     },
   };
 
@@ -253,6 +260,58 @@ export default function Home() {
   return (
     <div className="flex flex-col items-center justify-center min-h-screen py-10 bg-secondary">
       <div className="container max-w-md p-8 rounded-2xl shadow-lg bg-card">
+        
+        <div className="flex justify-end">
+          <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger asChild>
+              <Button variant="ghost" size="icon">
+                <Settings className="h-5 w-5" />
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[425px]">
+              <DialogHeader>
+                <DialogTitle>{t.settings}</DialogTitle>
+                <DialogDescription>{t.chooseSound}</DialogDescription>
+              </DialogHeader>
+              <div className="grid gap-4 py-4">
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="volume" className="text-right">
+                    {t.volume}
+                  </Label>
+                  <Slider
+                    id="volume"
+                    defaultValue={[alarmVolume * 100]}
+                    max={100}
+                    step={1}
+                    className="col-span-3"
+                    onValueChange={(value) => setAlarmVolume(value[0] / 100)}
+                  />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="alarmSound" className="text-right">
+                    {t.uploadSound}
+                  </Label>
+                  <Input
+                    type="file"
+                    id="alarmSound"
+                    accept="audio/*"
+                    className="col-span-3"
+                    onChange={handleFileChange}
+                  />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="theme" className="text-right">
+                    {t.theme}
+                  </Label>
+                  <Button variant="outline" size="icon" onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}>
+                    {theme === 'light' ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
+                  </Button>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
+        </div>
+
         <h1 className="text-3xl font-bold mb-6 text-center text-primary">
           Pomodoro Focus
         </h1>
@@ -335,49 +394,6 @@ export default function Home() {
           <Button variant="outline" onClick={switchLanguage}>
             {t.language}: {language === "en" ? "English" : "Português"}
           </Button>
-        </div>
-
-        <div className="flex justify-center mt-4">
-          <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild>
-              <Button variant="ghost" size="icon">
-                <Settings className="h-5 w-5" />
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[425px]">
-              <DialogHeader>
-                <DialogTitle>{t.settings}</DialogTitle>
-                <DialogDescription>{t.chooseSound}</DialogDescription>
-              </DialogHeader>
-              <div className="grid gap-4 py-4">
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="volume" className="text-right">
-                    {t.volume}
-                  </Label>
-                  <Slider
-                    id="volume"
-                    defaultValue={[alarmVolume * 100]}
-                    max={100}
-                    step={1}
-                    className="col-span-3"
-                    onValueChange={(value) => setAlarmVolume(value[0] / 100)}
-                  />
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="alarmSound" className="text-right">
-                    {t.uploadSound}
-                  </Label>
-                  <Input
-                    type="file"
-                    id="alarmSound"
-                    accept="audio/*"
-                    className="col-span-3"
-                    onChange={handleFileChange}
-                  />
-                </div>
-              </div>
-            </DialogContent>
-          </Dialog>
         </div>
         {isAlarming && (
           <div className="fixed top-0 left-0 w-full h-full bg-black/50 flex items-center justify-center z-50">
